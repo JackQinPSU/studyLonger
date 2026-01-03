@@ -6,7 +6,7 @@ export default function Dashboard() {
   return (
     <div>
       <h2>Dashboard ✅</h2>
-      <p>Logged in as: {user.username}</p>
+      <p>Logged in as: {user.email}</p>
     </div>
   );
 }

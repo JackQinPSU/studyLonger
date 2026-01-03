@@ -16,7 +16,7 @@ const loginUser = async (req, res) => {
             where: { email }
         });
         if (!user) {
-            res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Invalid email or password' });
         };
         const passwordMatch = await bcrypt.compare(req.body.password, user.passwordHash);
         if (!passwordMatch) {

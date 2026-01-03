@@ -1,6 +1,7 @@
 const express = require ("express");
 const cookieParser = require("cookie-parser");
 const app = express();
+const cors = require("cors");
 
 //middleware
 app.use(express.json());
@@ -12,7 +13,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
 //routes
 app.use('/api/sessions', require('../routes/session.route'));
