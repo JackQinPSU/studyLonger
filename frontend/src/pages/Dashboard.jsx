@@ -1,7 +1,26 @@
 import { useEffect, useState } from "react";
 import { startSession, endSession } from "../services/sessions";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 const LS_KEY = "activeSessionId";
+
+const mockWeeklyData = [
+  { day: "Mon", minutes: 60 },
+  { day: "Tue", minutes: 90 },
+  { day: "Wed", minutes: 30 },
+  { day: "Thu", minutes: 120 },
+  { day: "Fri", minutes: 75 },
+  { day: "Sat", minutes: 45 },
+  { day: "Sun", minutes: 0 },
+];
 
 export default function Dashboard() {
   const [activeSessionId, setActiveSessionId] = useState(
@@ -108,6 +127,25 @@ export default function Dashboard() {
 
         {err && <p style={{ color: "crimson", marginBottom: 0 }}>{err}</p>}
       </div>
+      <div style={{ marginTop: 24 }}>
+        <h3>Weekly Study Time</h3>
+
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={mockWeeklyData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="day" />
+            <YAxis />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="minutes"
+              stroke="#4f46e5"
+              strokeWidth={2}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
     </div>
   );
 }
