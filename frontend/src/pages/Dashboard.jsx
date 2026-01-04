@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { startSession, endSession } from "../services/sessions";
+import { use, useEffect, useState } from "react";
+import { startSession, endSession, getSessions } from "../services/sessions";
 import {
   LineChart,
   Line,
@@ -12,16 +12,6 @@ import {
 
 const LS_KEY = "activeSessionId";
 
-const mockWeeklyData = [
-  { day: "Mon", minutes: 60 },
-  { day: "Tue", minutes: 90 },
-  { day: "Wed", minutes: 30 },
-  { day: "Thu", minutes: 120 },
-  { day: "Fri", minutes: 75 },
-  { day: "Sat", minutes: 45 },
-  { day: "Sun", minutes: 0 },
-];
-
 export default function Dashboard() {
   const [activeSessionId, setActiveSessionId] = useState(
     () => localStorage.getItem(LS_KEY) || ""
@@ -30,7 +20,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [subject, setSubject] = useState("");
+  const [weeklyData, setWeeklyData] = useState([]);
 
+  //Load weekly data
+  useEffect(() => {
+    (async () => {
+      try {
+        const sessions = await getSessions();
+        setWeeklyData(buildWeelyMinutes(sessions));
+      } catch (e) {
+        console.log("Failed to load sessions", e);
+      }
+    })();
+  }, []);
+
+  // Load start time for active session
   useEffect(() => {
     const savedStartAt = localStorage.getItem("activeSessionStartAt");
     if (savedStartAt) setStartAt(new Date(savedStartAt));
@@ -65,6 +69,45 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  }
+
+
+  function buildWeelyMinutes(sessions) {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const now = new Date()
+    const buckets = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+
+      buckets.push({
+        day: days[d.getDay()],
+        dateKey: d.toISOString().slice(0, 10), // YYYY-MM-DD
+        minutes: 0,
+      });
+    }
+
+    const map = new Map(buckets.map((b) => [b.dateKey, b]));
+
+    for (const s of sessions) {
+      const start = new Date(s.startTime || s.startedAt || s.createdAt);
+      const end = s.endTime || s.endedAt ? new Date(s.endTime || s.endedAt) : null;
+      if (!end) continue; // Doesnt count active sessions
+
+      // Only group by the day it starts, make it simple
+      const key = start.toISOString().slice(0, 10);
+      const bucket = map.get(key);
+      if (!bucket) continue;
+
+      const minutes = Math.max(0, Math.round((end - start) / 60000));
+      bucket.minutes += minutes;
+    }
+
+    // Data for recharts
+    return buckets.map(({ day, minutes }) => ({ day, minutes }));
   }
 
   async function handleEnd() {
@@ -131,7 +174,7 @@ export default function Dashboard() {
         <h3>Weekly Study Time</h3>
 
         <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={mockWeeklyData}>
+          <LineChart data={weeklyData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="day" />
             <YAxis />

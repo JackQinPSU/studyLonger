@@ -43,7 +43,21 @@ const endSession = async (req, res) => {
         res.status(500).json({ error: 'Failed to end session' });
     }
 };
+
+const listSessions = async (req, res) => {
+    try {
+        const sessions = await prisma.session.findMany({
+            where: { userId: req.user.id },
+            orderBy: { startTime: 'desc' },
+            take: 200,
+        });
+        res.status(200).json( {sessions} );
+    } catch  (error) {
+        res.status(500).json({error});
+    }
+};
 module.exports = {
     createNewSession,
-    endSession
+    endSession,
+    listSessions
 };
