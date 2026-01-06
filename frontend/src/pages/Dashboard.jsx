@@ -13,6 +13,9 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import Page from "../components/Page";
+import Card from "../components/Card";
+import { PrimaryButton, SecondaryButton } from "../components/Button";
 
 const LS_KEY = "activeSessionId";
 
@@ -27,6 +30,7 @@ export default function Dashboard() {
   const [weeklyData, setWeeklyData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
   const [weeklySubjectData, setWeeklySubjectData] = useState([]);
+  const COLORS = ["#4f46e5", "#16a34a", "#f59e0b", "#ef4444", "#06b6d4", "#a855f7"];
 
 
 
@@ -192,6 +196,11 @@ export default function Dashboard() {
       setStartAt(null);
       localStorage.removeItem(LS_KEY);
       localStorage.removeItem("activeSessionStartAt");
+
+      const sessions = await getSessions();
+      setWeeklyData(buildWeelyMinutes(sessions));
+      setMonthlyData(buildMonthlyMinutes(sessions, 30));
+      setWeeklySubjectData(buildWeeklySubjectData(sessions));
     } catch (e) {
       setErr(e.message || "Failed to end session");
     } finally {
@@ -200,28 +209,56 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ display: "grid", gap: 12, maxWidth: 520 }}>
-      <h2>Dashboard</h2>
-
-      <div style={{ padding: 12, border: "1px solid #ddd", borderRadius: 8 }}>
-        <p style={{ marginTop: 0 }}>
-          Status:{" "}
-          {activeSessionId ? (
-            <b>IN SESSION (id: {activeSessionId})</b>
-          ) : (
-            <b>Not in session</b>
-          )}
-        </p>
-
-        {startAt && (
-          <p style={{ marginTop: 0 }}>
-            Started at: {startAt.toLocaleString()}
+  <Page title="Dashboard" subtitle="Track sessions and study trends.">
+    {/* Session */}
+    <Card>
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <p className="text-sm font-medium text-neutral-900">Session</p>
+          <p className="mt-1 text-sm text-neutral-500">
+            {activeSessionId ? (
+              <>
+                Active (id:{" "}
+                <span className="font-mono text-neutral-700">
+                  {activeSessionId}
+                </span>
+                )
+              </>
+            ) : (
+              "Not in session"
+            )}
           </p>
-        )}
 
-        <label style={{ display: "grid", gap: 6, marginBottom: 10 }}>
-          <span>Subject</span>
+          {startAt && (
+            <p className="mt-2 text-xs text-neutral-500">
+              Started:{" "}
+              <span className="text-neutral-700">
+                {startAt.toLocaleString()}
+              </span>
+            </p>
+          )}
+        </div>
+
+        <div className="text-sm text-neutral-500">
+          {activeSessionId ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              In session
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-neutral-300" />
+              Idle
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <label className="grid gap-2">
+          <span className="text-xs font-medium text-neutral-600">Subject</span>
           <input
+            className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition focus:border-neutral-400 disabled:bg-neutral-50"
             placeholder="e.g. Math 230"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
@@ -229,77 +266,121 @@ export default function Dashboard() {
           />
         </label>
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={handleStart} disabled={loading || !!activeSessionId}>
-            {loading ? "Working..." : "Start Session"}
-          </button>
+        <div className="flex items-end gap-3">
+          <PrimaryButton
+            onClick={handleStart}
+            disabled={loading || !!activeSessionId}
+          >
+            {loading ? "Working..." : "Start"}
+          </PrimaryButton>
 
-          <button onClick={handleEnd} disabled={loading || !activeSessionId}>
-            {loading ? "Working..." : "End Session"}
-          </button>
+          <SecondaryButton
+            onClick={handleEnd}
+            disabled={loading || !activeSessionId}
+          >
+            {loading ? "Working..." : "End"}
+          </SecondaryButton>
+        </div>
+      </div>
+
+      {err && (
+        <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {err}
+        </p>
+      )}
+    </Card>
+
+    {/* Charts */}
+    <div className="grid gap-6 md:grid-cols-2">
+      {/* Weekly */}
+      <Card>
+        <div className="mb-3">
+          <p className="text-sm font-medium text-neutral-900">
+            Weekly study time
+          </p>
+          <p className="mt-1 text-xs text-neutral-500">
+            Minutes per day (last 7 days)
+          </p>
         </div>
 
-        {err && <p style={{ color: "crimson", marginBottom: 0 }}>{err}</p>}
-      </div>
-      <div style={{ marginTop: 24 }}>
-        <h3>Weekly Study Time</h3>
-
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={weeklyData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="minutes"
-              stroke="#4f46e5"
-              strokeWidth={2}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      <div style={{ marginTop: 24 }}>
-        <h3>Monthly Study Time (Last 30 Days)</h3>
-
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={monthlyData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" interval={4} /> {/* show fewer labels */}
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="minutes" stroke="#16a34a" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      <div style={{ marginTop: 24 }}>
-        <h3>Weekly Time by Subject</h3>
-
-        {weeklySubjectData.length === 0 ? (
-          <p style={{ color: "#666" }}>No completed sessions in the last 7 days.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={weeklySubjectData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={90}
-                label
-              >
-                {weeklySubjectData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} />
-                ))}
-              </Pie>
+        <div className="h-[240px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={weeklyData}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />
-              <Legend />
-            </PieChart>
+              <Line type="monotone" dataKey="minutes" strokeWidth={2} />
+            </LineChart>
           </ResponsiveContainer>
-        )}
+        </div>
+      </Card>
+
+      {/* Weekly by subject */}
+      <Card>
+        <div className="mb-3">
+          <p className="text-sm font-medium text-neutral-900">
+            Weekly time by subject
+          </p>
+          <p className="mt-1 text-xs text-neutral-500">
+            Completed sessions only
+          </p>
+        </div>
+
+        <div className="h-[240px]">
+          {weeklySubjectData.length === 0 ? (
+            <p className="text-sm text-neutral-500">
+              No completed sessions in the last 7 days.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={weeklySubjectData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={80}
+                  label
+                >
+                  {weeklySubjectData.map((_, index) => (
+                    <Cell
+                      key={index}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </Card>
+    </div>
+
+    {/* Monthly */}
+    <Card>
+      <div className="mb-3">
+        <p className="text-sm font-medium text-neutral-900">
+          Monthly study time
+        </p>
+        <p className="mt-1 text-xs text-neutral-500">
+          Minutes per day (last 30 days)
+        </p>
       </div>
 
-    </div>
-  );
+      <div className="h-[260px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={monthlyData}>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+            <XAxis dataKey="day" interval={4} tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} />
+            <Tooltip />
+            <Line type="monotone" dataKey="minutes" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </Card>
+  </Page>
+);
 }
