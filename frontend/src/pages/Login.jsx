@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
+import Page from "../components/Page";
+import Card from "../components/Card";
+import { PrimaryButton } from "../components/Button";
+
 
 export default function Login() {
   const { login } = useAuth();
@@ -25,27 +29,50 @@ export default function Login() {
   }
 
   return (
-    <div style={{ maxWidth: 420 }}>
-      <h2>Login</h2>
+    <Page title="Log in" subtitle="Welcome back">
+      <div className="mx-auto max-w-md">
+        <Card>
+          <form onSubmit={onSubmit} className="grid gap-4">
+            <label className="grid gap-1">
+              <span className="text-xs font-medium text-neutral-600">
+                Email
+              </span>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition focus:border-neutral-400"
+                required
+              />
+            </label>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
-        <input
-          placeholder="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+            <label className="grid gap-1">
+              <span className="text-xs font-medium text-neutral-600">
+                Password
+              </span>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition focus:border-neutral-400"
+                required
+              />
+            </label>
 
-        <input
-          type="password"
-          placeholder="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+            <PrimaryButton type="submit">
+              Log in
+            </PrimaryButton>
 
-        <button>Login</button>
-
-        {err && <p style={{ color: "crimson" }}>{err}</p>}
-      </form>
-    </div>
+            {err && (
+              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {err}
+              </p>
+            )}
+          </form>
+        </Card>
+      </div>
+    </Page>
   );
 }
