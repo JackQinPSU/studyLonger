@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import Page from "../components/Page";
 import Card from "../components/Card";
-import { PrimaryButton } from "../components/Button";
+import { PrimaryButton, SecondaryButton } from "../components/Button";
 
 
 export default function Login() {
@@ -64,6 +64,10 @@ export default function Login() {
             <PrimaryButton type="submit">
               Log in
             </PrimaryButton>
+
+            <SecondaryButton onClick={() => nav("/register")}>
+              Register
+            </SecondaryButton>
 
             {err && (
               <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
