@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
+        await authApi.login(email, password); // first login 
         const data = await authApi.me();     // { user: {id,email} }
         setUser(data.user);
       } catch {
