@@ -40,7 +40,7 @@ const loginUser = async (req, res) => {
         // Set cookie
         res.cookie("sessionToken", authSession.token, {
             httpOnly: true,
-            sameSite: "lax",
+            sameSite: isProd ? "none" : "lax",
             secure: process.env.NODE_ENV === "production",
             expires: expiresAt,
         });
