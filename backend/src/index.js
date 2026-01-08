@@ -2,11 +2,13 @@ const express = require ("express");
 const cookieParser = require("cookie-parser");
 const app = express();
 const cors = require("cors");
+require("dotenv").config(); 
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN,
+  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
   credentials: true,
 }));
+console.log("🌍 CORS_ORIGIN =", process.env.CORS_ORIGIN);
 
 //middleware
 app.use(express.json());

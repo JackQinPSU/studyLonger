@@ -38,16 +38,18 @@ const loginUser = async (req, res) => {
         });
 
         // Set cookie
+        const isProd = process.env.NODE_ENV === "production";
         res.cookie("sessionToken", authSession.token, {
             httpOnly: true,
             sameSite: isProd ? "none" : "lax",
-            secure: process.env.NODE_ENV === "production",
+            secure: isProd,
             expires: expiresAt,
         });
         res.status(200).json({ message: 'Login successful', userId: user.id });
 
     } catch (error) {
-        res.status(500).json({ error: 'Login failed' });
+        console.error("🔥 loginUser 里面炸了：", error);
+        res.status(500).json(error);
     }
 };
 
