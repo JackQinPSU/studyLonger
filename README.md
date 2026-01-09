@@ -198,4 +198,4 @@ VITE_API_URL="https://your-backend-domain.com"
 
 ## 📜 License
 
-MIT License © 2026 — Your Name Here
+MIT License © 2026 — Qishu Qin 
